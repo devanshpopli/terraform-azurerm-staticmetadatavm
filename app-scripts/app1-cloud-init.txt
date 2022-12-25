@@ -1,0 +1,20 @@
+#cloud-config
+package_upgrade: false
+packages:
+  - httpd
+write_files:
+  - owner: root:root 
+    path: /var/www/html/index.html 
+    content: |
+      <h1>a</h1> 
+runcmd:
+  - sudo systemctl start httpd  
+  - sudo systemctl enable httpd
+  - sudo systemctl stop firewalld
+  - sudo yum install jq
+  - [sudo, curl, -H, "Metadata:true", --noproxy, "*", "http://169.254.169.254/metadata/instance?api-version=2020-09-01", -o, file.json]
+  - rId=$(jq '.compute.resourceId' file.json)
+  - macAddress=$(jq '.network.interface[0].macAddress' file.json)
+  - privateIpAddress=$(jq '.network.interface[0].ipv4.ipAddress[0].privateIpAddress' file.json)
+  - chmod 777 /var/www/html/index.html
+  - sudo echo "ResourceID - $rId <br> MacAddress - $macAddress <br> privateIPAddress - $privateIpAddress" > /var/www/html/index.html
